@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>🎄 Palavras Cruzadas de Natal · Transmissão de Dados</title>
+  <style>
+    :root {
+      --bg: #0a1628;
+      --cell: #fffef7;
+      --brand: #e11d48;
+      --green: #16a34a;
+      --gold: #fbbf24;
+      --correct: #22c55e;
+      --wrong: #f87171;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 12px;
+      overflow-x: hidden;
+    }
+
+    /* ===== FUNDO NATAL ===== */
+    .bg {
+      position: fixed; inset: 0; z-index: -2;
+      background:
+        radial-gradient(ellipse 90% 55% at 50% -10%, rgba(225,29,72,0.22), transparent 55%),
+        radial-gradient(ellipse 45% 40% at 10% 90%, rgba(22,163,74,0.15), transparent),
+        radial-gradient(ellipse 40% 35% at 90% 75%, rgba(251,191,36,0.12), transparent),
+        linear-gradient(180deg, #0a1628 0%, #0f1c2e 40%, #1a0f14 100%);
+    }
+    .bg::after {
+      content: "";
+      position: absolute; inset: 0;
+      background-image:
+        radial-gradient(2px 2px at 20% 30%, rgba(255,255,255,0.4), transparent),
+        radial-gradient(2px 2px at 60% 70%, rgba(255,255,255,0.3), transparent),
+        radial-gradient(1.5px 1.5px at 80% 20%, rgba(255,255,255,0.35), transparent),
+        radial-gradient(1.5px 1.5px at 40% 80%, rgba(255,255,255,0.25), transparent);
+      opacity: 0.6;
+    }
+
+    /* Neve */
+    .snow {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;
+    }
+    .flake {
+      position: absolute;
+      top: -12px;
+      color: #fff;
+      font-size: 10px;
+      opacity: 0.75;
+      animation: fall linear infinite;
+      text-shadow: 0 0 4px rgba(255,255,255,0.8);
+      user-select: none;
+    }
+    @keyframes fall {
+      0%   { transform: translateY(0) translateX(0) rotate(0deg); opacity: 0.8; }
+      100% { transform: translateY(110vh) translateX(40px) rotate(360deg); opacity: 0.15; }
+    }
+
+    /* Luzes de Natal no topo */
+    .lights {
+      position: fixed; top: 0; left: 0; right: 0; height: 8px; z-index: 5;
+      display: flex; justify-content: space-around; padding: 0 4%;
+      pointer-events: none;
+    }
+    .lights span {
+      width: 10px; height: 10px; border-radius: 50%;
+      animation: blink 1.2s ease-in-out infinite alternate;
+      box-shadow: 0 0 8px currentColor;
+    }
+    .lights span:nth-child(odd)  { background: #e11d48; color: #e11d48; animation-delay: 0s; }
+    .lights span:nth-child(even) { background: #16a34a; color: #16a34a; animation-delay: 0.4s; }
+    .lights span:nth-child(3n)   { background: #fbbf24; color: #fbbf24; animation-delay: 0.8s; }
+    @keyframes blink {
+      from { opacity: 0.4; transform: scale(0.85); }
+      to   { opacity: 1; transform: scale(1.1); }
+    }
+
+    header {
+      text-align: center;
+      margin: 12px 0 8px;
+      position: relative;
+      z-index: 1;
+    }
+    header h1 {
+      font-size: 1.45rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(90deg, #fbbf24, #f87171, #4ade80, #38bdf8, #fbbf24);
+      background-size: 250% auto;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 5s linear infinite;
+    }
+    @keyframes shimmer { to { background-position: 250% center; } }
+    header p {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    .decor {
+      font-size: 1.1rem;
+      letter-spacing: 6px;
+      margin-top: 4px;
+      opacity: 0.9;
+    }
+
+    .credits-bar {
+      display: flex; justify-content: center; margin-bottom: 10px; z-index: 1; position: relative;
+    }
+    .credit-pill {
+      background: linear-gradient(135deg, #422006, #78350f);
+      border: 1.5px solid var(--gold);
+      color: var(--gold);
+      font-weight: 800;
+      font-size: 0.95rem;
+      padding: 7px 16px;
+      border-radius: 999px;
+      display: flex; align-items: center; gap: 6px;
+      box-shadow: 0 0 22px rgba(251,191,36,0.35);
+      transition: transform 0.15s;
+    }
+
+    .toolbar {
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+      margin-bottom: 10px; position: relative; z-index: 1;
+    }
+    .btn {
+      background: linear-gradient(135deg, #e11d48, #be123c);
+      color: white; border: none; border-radius: 12px;
+      padding: 10px 15px; font-size: 0.85rem; font-weight: 600;
+      cursor: pointer; transition: transform 0.12s, opacity 0.15s;
+      box-shadow: 0 4px 14px rgba(225,29,72,0.35);
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .btn.secondary {
+      background: #1e293b; box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+      border: 1px solid #334155;
+    }
+    .btn.danger { background: linear-gradient(135deg, #b91c1c, #7f1d1d); }
+    .btn.icon { padding: 10px 12px; font-size: 1.05rem; }
+    .btn.green {
+      background: linear-gradient(135deg, #16a34a, #15803d);
+      box-shadow: 0 4px 14px rgba(22,163,74,0.3);
+    }
+
+    .status {
+      text-align: center; font-size: 0.88rem; color: var(--muted);
+      margin-bottom: 14px; min-height: 1.3em; font-weight: 500;
+      position: relative; z-index: 1;
+    }
+    .status.ok { color: var(--correct); }
+    .status.bad { color: var(--wrong); }
+
+    .main {
+      display: flex; flex-direction: column; align-items: center; gap: 18px;
+      max-width: 960px; margin: 0 auto; position: relative; z-index: 1;
+    }
+    @media (min-width: 860px) {
+      .main { flex-direction: row; align-items: flex-start; justify-content: center; }
+    }
+
+    #board {
+      display: grid; grid-template-columns: repeat(13, 26px); gap: 2px;
+      background: rgba(15,23,42,0.92);
+      padding: 7px; border-radius: 14px;
+      box-shadow:
+        0 0 0 2px rgba(251,191,36,0.3),
+        0 12px 40px rgba(0,0,0,0.5),
+        0 0 30px rgba(225,29,72,0.1);
+    }
+    @media (min-width: 400px) { #board { grid-template-columns: repeat(13, 31px); } }
+    @media (min-width: 520px) { #board { grid-template-columns: repeat(13, 37px); gap: 3px; padding: 9px; } }
+
+    .cell {
+      width: 26px; height: 26px; background: var(--cell);
+      position: relative; display: flex; align-items: center; justify-content: center;
+      border-radius: 4px; transition: background 0.15s;
+    }
+    @media (min-width: 400px) { .cell { width: 31px; height: 31px; } }
+    @media (min-width: 520px) { .cell { width: 37px; height: 37px; } }
+    .cell.block { background: transparent; }
+    .cell input {
+      width: 100%; height: 100%; border: none; background: transparent;
+      text-align: center; font-size: 0.95rem; font-weight: 800;
+      text-transform: uppercase; color: #0f172a; caret-color: var(--brand);
+      outline: none; border-radius: 4px;
+    }
+    @media (min-width: 520px) { .cell input { font-size: 1.15rem; } }
+    .cell.selected {
+      outline: 2px solid var(--gold); outline-offset: -1px; z-index: 2;
+      box-shadow: 0 0 14px rgba(251,191,36,0.55);
+    }
+    .cell.correct { background: #dcfce7; }
+    .cell.correct input { color: #15803d; }
+    .cell.wrong { background: #fee2e2; animation: shake 0.35s ease; }
+    .cell.wrong input { color: #b91c1c; }
+    @keyframes shake {
+      0%,100% { transform: translateX(0); }
+      25% { transform: translateX(-3px); }
+      75% { transform: translateX(3px); }
+    }
+    .cell .num {
+      position: absolute; top: 1px; left: 2px;
+      font-size: 7px; font-weight: 700; color: #be123c; pointer-events: none;
+    }
+    @media (min-width: 520px) { .cell .num { font-size: 9px; } }
+
+    .clues {
+      background: rgba(15,23,42,0.94);
+      border-radius: 14px; padding: 14px;
+      width: 100%; max-width: 370px; max-height: 68vh; overflow-y: auto;
+      border: 1px solid rgba(251,191,36,0.25);
+      box-shadow: 0 8px 28px rgba(0,0,0,0.35);
+    }
+    .clues h2 {
+      font-size: 0.95rem; margin-bottom: 10px; color: var(--gold);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .clue {
+      padding: 10px 12px; margin-bottom: 7px; background: #0f172a;
+      border-radius: 10px; cursor: pointer; border-left: 3px solid transparent;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .clue:hover, .clue.active {
+      border-left-color: var(--gold); background: #1e293b;
+    }
+    .clue .num {
+      display: inline-block;
+      background: linear-gradient(135deg, #e11d48, #be123c);
+      color: white; font-size: 0.72rem; font-weight: 700;
+      width: 22px; height: 22px; border-radius: 50%;
+      text-align: center; line-height: 22px; margin-right: 7px;
+    }
+    .clue .dir { font-size: 0.7rem; color: var(--muted); margin-right: 4px; }
+    .clue .text { font-size: 0.86rem; line-height: 1.35; }
+    .clue.done { opacity: 0.5; }
+    .clue.done .num { background: var(--correct); }
+
+    .modal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.85);
+      z-index: 100; align-items: center; justify-content: center; padding: 20px;
+      backdrop-filter: blur(8px);
+    }
+    .modal.show { display: flex; }
+    .modal-box {
+      background: linear-gradient(160deg, #1e293b, #0f172a);
+      border: 1px solid rgba(251,191,36,0.45); border-radius: 20px;
+      padding: 34px 28px; max-width: 340px; text-align: center;
+      box-shadow: 0 24px 60px rgba(0,0,0,0.6); position: relative; z-index: 2;
+    }
+    .modal-box h2 { margin-bottom: 8px; font-size: 1.6rem; }
+    .modal-box .msg { color: var(--gold); font-weight: 600; margin-bottom: 10px; font-size: 1.05rem; }
+    .modal-box p { color: var(--muted); margin-bottom: 20px; font-size: 0.9rem; }
+    #confetti-canvas { position: fixed; inset: 0; pointer-events: none; z-index: 101; }
+
+    .holly {
+      position: fixed; bottom: 8px; left: 0; right: 0;
+      text-align: center; font-size: 0.85rem; opacity: 0.55;
+      pointer-events: none; z-index: 1; letter-spacing: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="lights" id="lights"></div>
+  <div class="snow" id="snow"></div>
+  <canvas id="confetti-canvas"></canvas>
+
+  <header>
+    <h1>🎄 Palavras Cruzadas de Natal</h1>
+    <p>Características Físicas e Tipos de Transmissão de Dados</p>
+    <div class="decor">❄️ 🎅 🎁 ⭐ 🦌 ❄️</div>
+  </header>
+
+  <div class="credits-bar">
+    <div class="credit-pill" id="creditPill">
+      <span>⭐</span> <span id="creditCount">3</span> créditos de Natal
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn green" id="btnCheck">✓ Verificar</button>
+    <button class="btn secondary" id="btnReveal">💡 Revelar (1⭐)</button>
+    <button class="btn secondary" id="btnClear">🗑 Limpar</button>
+    <button class="btn danger" id="btnSolve">Solução</button>
+    <button class="btn secondary icon" id="btnMusic" title="Música">🔊</button>
+  </div>
+  <div class="status" id="status">❄️ Clica numa pista ou célula — Boas Festas!</div>
+
+  <div class="main">
+    <div id="board"></div>
+    <div class="clues">
+      <h2>🎁 Pistas de Natal</h2>
+      <div id="clueList"></div>
+    </div>
+  </div>
+
+  <div class="holly">🎄 ❄️ ⭐ 🎄 ❄️ ⭐ 🎄</div>
+
+  <div class="modal" id="winModal">
+    <div class="modal-box">
+      <h2>🎅 Parabéns!</h2>
+      <div class="msg" id="winMsg">Excelente trabalho!</div>
+      <p>Completaste a palavras cruzadas de Natal sobre transmissão de dados.</p>
+      <button class="btn green" onclick="closeWin()">🎁 Fechar</button>
+    </div>
+  </div>
+
+<script>
+const ROWS = 13, COLS = 13;
+const SOLUTION = [
+  ['', '', '', '', '', '', '', '', '', '', 'P', '', 'A'],
+  ['', 'A', 'M', 'P', 'L', 'I', 'T', 'U', 'D', 'E', 'S', '', 'S'],
+  ['M', '', '', '', '', '', '', '', '', '', 'K', 'F', 'K'],
+  ['O', '', 'A', 'T', 'E', 'N', 'U', 'A', 'C', 'A', 'O', 'U', ''],
+  ['D', '', '', '', 'S', '', '', '', '', '', '', 'L', ''],
+  ['U', '', '', 'S', 'I', 'M', 'P', 'L', 'E', 'X', '', 'L', ''],
+  ['L', '', 'B', '', 'N', '', '', '', '', 'B', '', 'D', ''],
+  ['A', '', 'A', '', 'A', 'F', 'A', 'S', 'E', 'I', '', 'U', ''],
+  ['C', '', 'N', '', 'L', '', '', 'F', '', 'T', '', 'P', ''],
+  ['A', '', 'D', '', 'R', 'U', 'I', 'D', 'O', '', '', 'L', ''],
+  ['O', '', 'A', '', '', '', '', 'M', '', '', '', 'E', ''],
+  ['', '', 'T', 'R', 'A', 'M', 'A', '', '', '', '', 'X', ''],
+  ['', '', '', '', '', 'T', 'D', 'M', '', '', '', '', ''],
+];
+const NUMBERS = [
+  [0,0,0,0,0,0,0,0,0,0,14,0,15],
+  [0,1,0,0,0,0,0,0,0,0,0,0,0],
+  [10,0,0,0,0,0,0,0,0,0,0,11,0],
+  [0,0,2,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,7,0,0,0,0,0,0,0,0],
+  [0,0,0,3,0,0,0,0,0,0,0,0,0],
+  [0,0,12,0,0,0,0,0,0,9,0,0,0],
+  [0,0,0,0,0,4,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,8,0,0,0,0,0],
+  [0,0,0,0,5,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,0,0,0,0,0,0,0,0],
+  [0,0,6,0,0,0,0,0,0,0,0,0,0],
+  [0,0,0,0,0,13,0,0,0,0,0,0,0],
+];
+const BLOCKS = [
+  [1,1,1,1,1,1,1,1,1,1,0,1,0],
+  [1,0,0,0,0,0,0,0,0,0,0,1,0],
+  [0,1,1,1,1,1,1,1,1,1,0,0,0],
+  [0,1,0,0,0,0,0,0,0,0,0,0,1],
+  [0,1,1,1,0,1,1,1,1,1,1,0,1],
+  [0,1,1,0,0,0,0,0,0,0,1,0,1],
+  [0,1,0,1,0,1,1,1,1,0,1,0,1],
+  [0,1,0,1,0,0,0,0,0,0,1,0,1],
+  [0,1,0,1,0,1,1,0,1,0,1,0,1],
+  [0,1,0,1,0,0,0,0,0,1,1,0,1],
+  [0,1,0,1,1,1,1,0,1,1,1,0,1],
+  [1,1,0,0,0,0,0,1,1,1,1,0,1],
+  [1,1,1,1,1,0,0,0,1,1,1,1,1],
+];
+const CLUES = [
+  { n:1,  dir:"H", text:"Altura máxima de uma onda (intensidade do sinal)", r:1, c:1 },
+  { n:2,  dir:"H", text:"Perda de potência do sinal durante a propagação", r:3, c:2 },
+  { n:3,  dir:"H", text:"Transmissão num único sentido", r:5, c:3 },
+  { n:4,  dir:"H", text:"Posição relativa de uma onda no tempo", r:7, c:5 },
+  { n:5,  dir:"H", text:"Sinais indesejados que se sobrepõem ao sinal útil", r:9, c:4 },
+  { n:6,  dir:"H", text:"Unidade de dados na camada de enlace", r:11, c:2 },
+  { n:7,  dir:"V", text:"Representação física da informação (ex.: tensão)", r:4, c:4 },
+  { n:8,  dir:"V", text:"Multiplexação por divisão de frequência", r:8, c:7 },
+  { n:9,  dir:"V", text:"Unidade básica de informação digital", r:6, c:9 },
+  { n:10, dir:"V", text:"Processo de modificar uma onda portadora", r:2, c:0 },
+  { n:11, dir:"V", text:"Transmissão nos dois sentidos em simultâneo", r:2, c:11 },
+  { n:12, dir:"V", text:"Intervalo de frequências disponível num canal", r:6, c:2 },
+  { n:13, dir:"H", text:"Multiplexação por divisão no tempo", r:12, c:5 },
+  { n:14, dir:"V", text:"Modulação por deslocamento de fase", r:0, c:10 },
+  { n:15, dir:"V", text:"Modulação por deslocamento de amplitude", r:0, c:12 },
+];
+const WIN_MESSAGES = [
+  "Feliz Natal! Sinal perfeito, sem ruído! 🎄",
+  "O Pai Natal aprova a tua taxa de transferência! 🎅",
+  "Presente desbloqueado: conhecimento full-duplex! 🎁",
+  "As luzes da rede estão todas verdes! ✨",
+  "Ho ho ho — transmissão concluída com sucesso! 🦌",
+  "És o técnico de Natal das redes! ⭐",
+];
+
+let credits = 3;
+let selectedR = -1, selectedC = -1;
+let direction = "H";
+const cells = [];
+const alreadyRewarded = {};
+
+let audioCtx = null;
+let musicOn = true;
+let musicStarted = false;
+let musicNodes = [];
+let melodyInterval = null;
+let snowNoiseNode = null;
+let snowGain = null;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
+function playCorrect() {
+  try {
+    const ctx = ensureAudio();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(987, now);
+    osc.frequency.exponentialRampToValueAtTime(1318, now + 0.08);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+    osc.start(now); osc.stop(now + 0.28);
+  } catch(e) {}
+}
+function playWrong() {
+  try {
+    const ctx = ensureAudio();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(160, now);
+    osc.frequency.linearRampToValueAtTime(80, now + 0.14);
+    gain.gain.setValueAtTime(0.1, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
+    osc.start(now); osc.stop(now + 0.2);
+  } catch(e) {}
+}
+function playWin() {
+  try {
+    const ctx = ensureAudio();
+    [523, 659, 784, 988, 1175, 1318].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.type = "sine";
+      const t = ctx.currentTime + i * 0.1;
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0.13, t);
+      gain.gain.exponentialRampToValueAtTime(0.001, t + 0.4);
+      osc.start(t); osc.stop(t + 0.45);
+    });
+  } catch(e) {}
+}
+function playCredit() {
+  try {
+    const ctx = ensureAudio();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(1200, now);
+    osc.frequency.exponentialRampToValueAtTime(1800, now + 0.06);
+    gain.gain.setValueAtTime(0.09, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc.start(now); osc.stop(now + 0.18);
+  } catch(e) {}
+}
+
+/* Som suave de neve / vento */
+function startSnowSound() {
+  try {
+    const ctx = ensureAudio();
+    if (snowNoiseNode) return;
+    const bufferSize = 2 * ctx.sampleRate;
+    const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * 0.4;
+    }
+    const noise = ctx.createBufferSource();
+    noise.buffer = buffer;
+    noise.loop = true;
+    const filter = ctx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 600;
+    filter.Q.value = 0.5;
+    snowGain = ctx.createGain();
+    snowGain.gain.value = musicOn ? 0.035 : 0;
+    noise.connect(filter);
+    filter.connect(snowGain);
+    snowGain.connect(ctx.destination);
+    noise.start();
+    snowNoiseNode = noise;
+  } catch(e) {}
+}
+
+/* Música de Natal — melodia estilo Jingle Bells (domínio público, 1857) */
+function startMusic() {
+  if (musicStarted) return;
+  try {
+    const ctx = ensureAudio();
+    musicStarted = true;
+    startSnowSound();
+
+    // Pad quente
+    const o1 = ctx.createOscillator();
+    const g1 = ctx.createGain();
+    o1.type = "sine"; o1.frequency.value = 98;
+    g1.gain.value = 0.035;
+    o1.connect(g1); g1.connect(ctx.destination); o1.start();
+
+    const o2 = ctx.createOscillator();
+    const g2 = ctx.createGain();
+    o2.type = "sine"; o2.frequency.value = 146.83;
+    g2.gain.value = 0.022;
+    o2.connect(g2); g2.connect(ctx.destination); o2.start();
+
+    musicNodes = [
+      { osc: o1, gain: g1, base: 0.035 },
+      { osc: o2, gain: g2, base: 0.022 },
+    ];
+
+    // Jingle Bells (notas aproximadas, domínio público)
+    // E E E | E E E | E G C D E | F F F F | F E E E | E D D E D | G
+    const jingle = [
+      659, 659, 659,  659, 659, 659,
+      659, 784, 523, 587, 659,
+      698, 698, 698, 698,  698, 659, 659, 659,
+      659, 587, 587, 659, 587,  784
+    ];
+    const durations = [
+      0.35,0.35,0.7,  0.35,0.35,0.7,
+      0.35,0.35,0.35,0.35,1.0,
+      0.35,0.35,0.35,0.35,  0.35,0.35,0.35,0.35,
+      0.35,0.35,0.35,0.35,0.7,  1.2
+    ];
+    let idx = 0;
+    let nextTime = ctx.currentTime + 0.3;
+
+    function scheduleNote() {
+      if (!musicOn || !audioCtx) {
+        melodyInterval = setTimeout(scheduleNote, 500);
+        return;
+      }
+      const freq = jingle[idx % jingle.length];
+      const dur = durations[idx % durations.length];
+      const osc = ctx.createOscillator();
+      const g = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      const t = Math.max(ctx.currentTime, nextTime);
+      g.gain.setValueAtTime(0.08, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.9);
+      osc.connect(g); g.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + dur);
+
+      // overtone tipo sino
+      const oscH = ctx.createOscillator();
+      const gH = ctx.createGain();
+      oscH.type = "sine";
+      oscH.frequency.value = freq * 2.005;
+      gH.gain.setValueAtTime(0.03, t);
+      gH.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.5);
+      oscH.connect(gH); gH.connect(ctx.destination);
+      oscH.start(t);
+      oscH.stop(t + dur * 0.55);
+
+      nextTime = t + dur;
+      idx++;
+      melodyInterval = setTimeout(scheduleNote, Math.max(50, (nextTime - ctx.currentTime) * 1000 - 30));
+    }
+    scheduleNote();
+  } catch(e) {}
+}
+
+function setMusicVolume(on) {
+  if (musicNodes.length) {
+    musicNodes.forEach(n => {
+      n.gain.gain.linearRampToValueAtTime(on ? n.base : 0, audioCtx.currentTime + 0.4);
+    });
+  }
+  if (snowGain) {
+    snowGain.gain.linearRampToValueAtTime(on ? 0.035 : 0, audioCtx.currentTime + 0.4);
+  }
+}
+function toggleMusic() {
+  ensureAudio();
+  musicOn = !musicOn;
+  document.getElementById("btnMusic").textContent = musicOn ? "🔊" : "🔇";
+  if (musicOn) {
+    if (!musicStarted) startMusic();
+    else setMusicVolume(true);
+  } else setMusicVolume(false);
+}
+
+function updateCreditsUI() {
+  document.getElementById("creditCount").textContent = credits;
+  document.getElementById("btnReveal").disabled = credits < 1;
+}
+function addCredit() {
+  credits++;
+  updateCreditsUI();
+  playCredit();
+  const pill = document.getElementById("creditPill");
+  pill.style.transform = "scale(1.12)";
+  setTimeout(() => pill.style.transform = "", 200);
+}
+function spendCredit() {
+  if (credits < 1) return false;
+  credits--;
+  updateCreditsUI();
+  return true;
+}
+
+function launchConfetti() {
+  const canvas = document.getElementById("confetti-canvas");
+  const ctx = canvas.getContext("2d");
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  const colors = ["#e11d48", "#16a34a", "#fbbf24", "#ffffff", "#38bdf8", "#f472b6"];
+  const pieces = [];
+  for (let i = 0; i < 150; i++) {
+    pieces.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height - canvas.height,
+      w: 6 + Math.random() * 8,
+      h: 4 + Math.random() * 6,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: -2.5 + Math.random() * 5,
+      vy: 2 + Math.random() * 4,
+      rot: Math.random() * Math.PI,
+      vr: -0.15 + Math.random() * 0.3,
+    });
+  }
+  let frames = 0;
+  function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    pieces.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.vy += 0.04;
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      ctx.rotate(p.rot);
+      ctx.fillStyle = p.color;
+      ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+      ctx.restore();
+    });
+    frames++;
+    if (frames < 230) requestAnimationFrame(draw);
+    else ctx.clearRect(0, 0, canvas.width, canvas.height);
+  }
+  draw();
+}
+function closeWin() {
+  document.getElementById("winModal").classList.remove("show");
+  const canvas = document.getElementById("confetti-canvas");
+  canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+}
+
+function makeLights() {
+  const el = document.getElementById("lights");
+  for (let i = 0; i < 18; i++) {
+    el.appendChild(document.createElement("span"));
+  }
+}
+function makeSnow() {
+  const snow = document.getElementById("snow");
+  const symbols = ["❄", "❅", "❆", "•"];
+  for (let i = 0; i < 45; i++) {
+    const f = document.createElement("div");
+    f.className = "flake";
+    f.textContent = symbols[i % symbols.length];
+    const size = 8 + Math.random() * 14;
+    f.style.fontSize = size + "px";
+    f.style.left = Math.random() * 100 + "%";
+    f.style.animationDuration = (7 + Math.random() * 12) + "s";
+    f.style.animationDelay = (Math.random() * 10) + "s";
+    f.style.opacity = 0.35 + Math.random() * 0.5;
+    snow.appendChild(f);
+  }
+}
+
+function buildBoard() {
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+  for (let r = 0; r < ROWS; r++) {
+    cells[r] = [];
+    for (let c = 0; c < COLS; c++) {
+      const div = document.createElement("div");
+      div.className = "cell" + (BLOCKS[r][c] ? " block" : "");
+      if (!BLOCKS[r][c]) {
+        const input = document.createElement("input");
+        input.maxLength = 1;
+        input.autocomplete = "off";
+        input.spellcheck = false;
+        input.dataset.r = r; input.dataset.c = c;
+        input.addEventListener("focus", () => {
+          selectCell(r, c);
+          ensureAudio();
+          if (musicOn && !musicStarted) startMusic();
+        });
+        input.addEventListener("input", onInput);
+        input.addEventListener("keydown", onKey);
+        div.appendChild(input);
+        if (NUMBERS[r][c]) {
+          const num = document.createElement("span");
+          num.className = "num";
+          num.textContent = NUMBERS[r][c];
+          div.appendChild(num);
+        }
+        cells[r][c] = { el: div, input };
+      } else cells[r][c] = null;
+      board.appendChild(div);
+    }
+  }
+}
+function buildClues() {
+  const list = document.getElementById("clueList");
+  list.innerHTML = "";
+  CLUES.forEach(cl => {
+    const d = document.createElement("div");
+    d.className = "clue";
+    d.dataset.n = cl.n;
+    d.innerHTML = `
+      <span class="num">${cl.n}</span>
+      <span class="dir">${cl.dir === "H" ? "→" : "↓"}</span>
+      <span class="text">${cl.text}</span>
+    `;
+    d.addEventListener("click", () => {
+      document.querySelectorAll(".clue").forEach(x => x.classList.remove("active"));
+      d.classList.add("active");
+      direction = cl.dir;
+      selectCell(cl.r, cl.c);
+      if (cells[cl.r][cl.c]) cells[cl.r][cl.c].input.focus();
+    });
+    list.appendChild(d);
+  });
+}
+function selectCell(r, c) {
+  if (selectedR >= 0 && cells[selectedR]?.[selectedC])
+    cells[selectedR][selectedC].el.classList.remove("selected");
+  selectedR = r; selectedC = c;
+  if (cells[r]?.[c]) cells[r][c].el.classList.add("selected");
+}
+function onInput(e) {
+  const inp = e.target;
+  const r = +inp.dataset.r, c = +inp.dataset.c;
+  let v = (inp.value || "").toUpperCase().replace(/[^A-Z]/g, "");
+  inp.value = v;
+  const cell = cells[r][c];
+  cell.el.classList.remove("correct", "wrong");
+  if (v) {
+    if (v === SOLUTION[r][c]) {
+      cell.el.classList.add("correct");
+      playCorrect();
+      const key = r + "," + c;
+      if (!alreadyRewarded[key]) {
+        alreadyRewarded[key] = true;
+        addCredit();
+      }
+    } else {
+      cell.el.classList.add("wrong");
+      playWrong();
+    }
+    moveNext(r, c);
+  }
+  updateStatus();
+}
+function onKey(e) {
+  const r = +e.target.dataset.r, c = +e.target.dataset.c;
+  if (e.key === "Backspace" && !e.target.value) movePrev(r, c);
+  else if (e.key === "ArrowRight") { e.preventDefault(); direction="H"; moveTo(r, c+1); }
+  else if (e.key === "ArrowLeft")  { e.preventDefault(); direction="H"; moveTo(r, c-1); }
+  else if (e.key === "ArrowDown")  { e.preventDefault(); direction="V"; moveTo(r+1, c); }
+  else if (e.key === "ArrowUp")    { e.preventDefault(); direction="V"; moveTo(r-1, c); }
+}
+function moveNext(r, c) { direction === "H" ? moveTo(r, c+1) : moveTo(r+1, c); }
+function movePrev(r, c) { direction === "H" ? moveTo(r, c-1) : moveTo(r-1, c); }
+function moveTo(r, c) {
+  if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return;
+  if (BLOCKS[r][c]) {
+    direction === "H" ? moveTo(r, c + (c > selectedC ? 1 : -1)) : moveTo(r + (r > selectedR ? 1 : -1), c);
+    return;
+  }
+  selectCell(r, c);
+  cells[r][c].input.focus();
+}
+function getLetter(r, c) {
+  if (BLOCKS[r][c] || !cells[r][c]) return "";
+  return (cells[r][c].input.value || "").toUpperCase();
+}
+function checkAll(playSounds) {
+  let total = 0, correct = 0, filled = 0, wrong = 0;
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      if (BLOCKS[r][c]) continue;
+      total++;
+      const user = getLetter(r, c);
+      const sol = SOLUTION[r][c];
+      const cell = cells[r][c];
+      cell.el.classList.remove("correct", "wrong");
+      if (user) {
+        filled++;
+        if (user === sol) { correct++; cell.el.classList.add("correct"); }
+        else { wrong++; cell.el.classList.add("wrong"); }
+      }
+    }
+  }
+  if (playSounds) {
+    if (wrong > 0) playWrong();
+    else if (correct > 0 && correct < total) playCorrect();
+  }
+  return { total, correct, filled, wrong };
+}
+function showWin() {
+  const msg = WIN_MESSAGES[Math.floor(Math.random() * WIN_MESSAGES.length)];
+  document.getElementById("winMsg").textContent = msg;
+  document.getElementById("winModal").classList.add("show");
+  playWin();
+  launchConfetti();
+  document.querySelectorAll(".clue").forEach(c => c.classList.add("done"));
+}
+function updateStatus() {
+  const { total, correct, filled } = checkAll(false);
+  const st = document.getElementById("status");
+  if (filled === 0) {
+    st.textContent = "❄️ Clica numa pista ou célula — Boas Festas!";
+    st.className = "status";
+  } else if (correct === total) {
+    st.textContent = "🎅 Completo! Feliz Natal!";
+    st.className = "status ok";
+    showWin();
+  } else {
+    st.textContent = correct + " / " + total + " corretas  ·  " + filled + " preenchidas  🎄";
+    st.className = "status";
+  }
+}
+document.getElementById("btnCheck").onclick = () => {
+  ensureAudio();
+  const { total, correct, filled, wrong } = checkAll(true);
+  const st = document.getElementById("status");
+  if (filled === 0) { st.textContent = "Ainda não preencheste nenhuma letra."; return; }
+  if (correct === total) {
+    st.textContent = "🎅 Perfeito! Feliz Natal!";
+    st.className = "status ok";
+    showWin();
+  } else {
+    st.textContent = correct + " corretas · " + wrong + " erradas · " + (total - filled) + " em falta";
+    st.className = "status " + (wrong === 0 ? "ok" : "bad");
+  }
+};
+document.getElementById("btnReveal").onclick = () => {
+  if (selectedR < 0 || BLOCKS[selectedR]?.[selectedC]) {
+    document.getElementById("status").textContent = "Seleciona primeiro uma célula.";
+    return;
+  }
+  if (!spendCredit()) {
+    document.getElementById("status").textContent = "Sem créditos de Natal! Acerta letras para ganhar mais.";
+    document.getElementById("status").className = "status bad";
+    playWrong();
+    return;
+  }
+  const sol = SOLUTION[selectedR][selectedC];
+  cells[selectedR][selectedC].input.value = sol;
+  cells[selectedR][selectedC].el.classList.remove("wrong");
+  cells[selectedR][selectedC].el.classList.add("correct");
+  alreadyRewarded[selectedR + "," + selectedC] = true;
+  playCorrect();
+  moveNext(selectedR, selectedC);
+  updateStatus();
+};
+document.getElementById("btnClear").onclick = () => {
+  if (!confirm("Limpar a grelha? Os créditos de Natal mantêm-se.")) return;
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (cells[r][c]) {
+        cells[r][c].input.value = "";
+        cells[r][c].el.classList.remove("correct", "wrong");
+      }
+  for (const k in alreadyRewarded) delete alreadyRewarded[k];
+  document.querySelectorAll(".clue").forEach(c => c.classList.remove("done"));
+  document.getElementById("status").textContent = "Grelha limpa. ❄️";
+  document.getElementById("status").className = "status";
+};
+document.getElementById("btnSolve").onclick = () => {
+  if (!confirm("Revelar a solução completa?")) return;
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (cells[r][c]) {
+        cells[r][c].input.value = SOLUTION[r][c];
+        cells[r][c].el.classList.add("correct");
+        cells[r][c].el.classList.remove("wrong");
+      }
+  showWin();
+  document.getElementById("status").textContent = "Solução revelada. 🎄";
+  document.getElementById("status").className = "status ok";
+};
+document.getElementById("btnMusic").onclick = toggleMusic;
+document.body.addEventListener("click", () => {
+  ensureAudio();
+  if (musicOn && !musicStarted) startMusic();
+}, { once: true });
+
+updateCreditsUI();
+makeLights();
+makeSnow();
+buildBoard();
+buildClues();
+</script>
+</body>
+</html>
